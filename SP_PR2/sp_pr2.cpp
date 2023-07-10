@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <windowsx.h>
 #include <tchar.h>
 
 LPCTSTR lpszClass = TEXT("SpPr12_Class");
@@ -64,19 +65,38 @@ LRESULT CALLBACK SpPr12_WndProc(HWND hWnd, UINT messageID,
 
 	switch (messageID)
 	{
+	case WM_LBUTTONDOWN:
+	{
+		HDC hdc;
+		hdc = GetDC(hWnd);
+		int x = 50;
+		int y = 100;
+		x = (int)(short)LOWORD(lParam);
+		y = GET_Y_LPARAM(lParam);
+		LPCTSTR lpszLbuttonDownMessage = TEXT("Обработка сообщения WM_LBUTTONDOWN,"
+			" которое посылается в окно при щелчке левой кнопки мыши");
+		TextOut(hdc, x, y, lpszLbuttonDownMessage, lstrlen(lpszLbuttonDownMessage));
+		ReleaseDC(hWnd, hdc);
+
+
+
+	}break;
+
 	case WM_PAINT: // Вывод при обновлении окна
 	{	HDC hDC;
 		PAINTSTRUCT ps;
 			hDC = BeginPaint(hWnd, &ps);	// Получение контекста для
 											// обновления окна
-			LPCTSTR lpszHelloText = TEXT("Hello, World!");
+			LPCTSTR lpszHelloText = TEXT("Hello, World Win32!");
 		TextOut(hDC, 10, 10, lpszHelloText, lstrlen(lpszHelloText)); // Вывод в контекст
 		EndPaint(hWnd, &ps); // Завершение обновления окна
 	}	break;
 	case WM_DESTROY: // Завершение работы приложения
-	{	MessageBox(hWnd, lpszDestroyMessage, TEXT("From WM_DESTROY"), MB_OK);
+	{	
+		MessageBox(hWnd, lpszDestroyMessage, TEXT("From WM_DESTROY"), MB_OK);
 		PostQuitMessage(5); // Посылка WM_QUIT приложению
 	}break;
+	
 	default: // Вызов "Обработчика по умолчанию"
 		return(DefWindowProc(hWnd, messageID, wParam, lParam));
 	}
