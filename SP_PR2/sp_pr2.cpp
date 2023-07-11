@@ -65,12 +65,20 @@ LRESULT CALLBACK SpPr12_WndProc(HWND hWnd, UINT messageID,
 
 	switch (messageID)
 	{
+	case WM_CREATE:
+	{MessageBox(hWnd, TEXT("Выполняется обработка WM_CREATE"), TEXT("From WM_CREATE"), MB_OK);
+	HWND hBtExit;
+	hBtExit = CreateWindowEx(0, TEXT("Button"), TEXT("Выход"), WS_CHILD | WS_VISIBLE,
+		50, 50, 100, 30, hWnd, NULL, g_hInst, NULL;
+	if(!hBtExit)
+	}return;
+
 	case WM_LBUTTONDOWN:
 	{
 		HDC hdc;
 		hdc = GetDC(hWnd);
-		int x = 50;
-		int y = 100;
+		int x;	// = 50;
+		int y;	// = 100;
 		x = (int)(short)LOWORD(lParam);
 		y = GET_Y_LPARAM(lParam);
 		LPCTSTR lpszLbuttonDownMessage = TEXT("Обработка сообщения WM_LBUTTONDOWN,"
@@ -93,8 +101,8 @@ LRESULT CALLBACK SpPr12_WndProc(HWND hWnd, UINT messageID,
 	}	break;
 	case WM_DESTROY: // Завершение работы приложения
 	{	
-		MessageBox(hWnd, lpszDestroyMessage, TEXT("From WM_DESTROY"), MB_OK);
-		PostQuitMessage(5); // Посылка WM_QUIT приложению
+	MessageBox(hWnd, lpszDestroyMessage, TEXT("From WM_DESTROY"), MB_OK);
+	PostQuitMessage(5); // Посылка WM_QUIT приложению
 	}break;
 	
 	default: // Вызов "Обработчика по умолчанию"
