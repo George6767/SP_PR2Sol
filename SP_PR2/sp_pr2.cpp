@@ -8,7 +8,96 @@ LPCTSTR lpszDestroyMessage = TEXT("Поступило сообщение WM_DESTROY, из обработчик
 	"которого и выполнен данный вывод.Сообщение "
 	"поступило в связи с разрушением окна приложения");
 //-- Prototypes -------------------
-LRESULT CALLBACK SpPr12_WndProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK pr1_WndProc(HWND hWnd, UINT Msg_id, WPARAM wParam, LPARAM lParam) {
+	static HWND hEdit;
+	const unsigned short int IDC_Edit = 200;
+	static HWND hListBox;
+	const unsigned short int IDC_ListBox = 201;
+	static HWND hButtonSave;
+	const unsigned short int IDC_ButtonSave = 202;
+	static HWND hButtonPrint;
+	const unsigned short int IDC_ButtonPrint = 203;
+	static HWND hButtonExit;
+	const unsigned short int IDC_ButtonExit = 204;
+	DWORD dwStyle = WS_CHILD | WS_BORDER | WS_VISIBLE;
+	static int LPad = 20, TPad = 30, CWidth = 120, CHeigth = 20;
+
+	static TCHAR lpsBuffer[1024];
+	static TCHAR lpsTextBuffer[200];
+	HDC hDC;
+	static int wmID, wmEvent;
+
+	switch (Msg_id)
+	{
+		case WM_CREATE: 
+		{
+		if (MessageBox(NULL, TEXT("Creating a window\nContinue?"), TEXT("Warning!"), MB_YESNO) == IDNO) 
+			{
+				return -1;
+			}
+		hEdit = CreateWindowEx(0, _T("Edit"), _T(""), dwStyle, LPad, TPad, CWidth, CHeigth, hWnd, (HMENU)IDC_Edit, 0, NULL);
+		if (!hEdit)
+			{
+				return -1;
+			}
+		hListBox = CreateWindowEx(0,
+			_T("ListBox"),
+			_T("ListBox"),
+			dwStyle,
+			LPad * 2 + CWidth, TPad, CWidth, CHeigth * 8,
+			hWnd,
+			(HMENU)IDC_ListBox,
+			0, NULL
+		);
+		if (!hListBox) 
+			{
+				return -1;
+			}
+		hButtonSave = CreateWindowEx(0,
+			_T("Button"),
+			_T("Save"),
+			dwStyle,
+			LPad, TPad * 2 + CHeigth * 2, CWidth * 2 / 3, CHeigth,
+			hWnd,
+			(HMENU)IDC_ButtonSave,
+			0, NULL);
+		if (!hButtonSave) 
+			{
+				return -1;
+			}
+
+
+		hButtonPrint = CreateWindowEx(0,
+			_T("Button"),
+			_T("Print"),
+			dwStyle,
+			LPad, TPad * 1.5 + CHeigth * 4, CWidth * 2 / 3, CHeigth,
+			hWnd,
+			(HMENU)IDC_ButtonPrint,
+			0, NULL);
+		if (!hButtonPrint)
+			{
+				return -1;
+			}
+		EnableWindow(hButtonPrint, FALSE);
+
+		hButtonExit = CreateWindowEx(0,
+			_T("Button"),
+			_T("Exit"),
+			dwStyle,
+			LPad, TPad + CHeigth * 6, CWidth * 2 / 3, CHeigth,
+			hWnd,
+			(HMENU)IDC_ButtonExit,
+			0, NULL);
+		if (!hButtonExit) 
+			{
+				return -1;
+			}
+
+		return 0;
+		break;
+		}
+	
 
 //-- Global Variables ------------
 HINSTANCE g_hInst;
@@ -66,12 +155,15 @@ LRESULT CALLBACK SpPr12_WndProc(HWND hWnd, UINT messageID,
 	switch (messageID)
 	{
 	case WM_CREATE:
-	{MessageBox(hWnd, TEXT("Выполняется обработка WM_CREATE"), TEXT("From WM_CREATE"), MB_OK);
-	HWND hBtExit;
-	hBtExit = CreateWindowEx(0, TEXT("Button"), TEXT("Выход"), WS_CHILD | WS_VISIBLE,
-		50, 50, 100, 30, hWnd, NULL, g_hInst, NULL;
-	if(!hBtExit)
-	}return;
+		if (MessageBox(NULL, TEXT("Creating a a window\nContinue"), TEXT("Warning!"), MB_YESNO) == IDYES)
+		{
+			return 0;
+		}
+		else
+		{
+		return -1;
+		}
+		break;
 
 	case WM_LBUTTONDOWN:
 	{
@@ -85,8 +177,6 @@ LRESULT CALLBACK SpPr12_WndProc(HWND hWnd, UINT messageID,
 			" которое посылается в окно при щелчке левой кнопки мыши");
 		TextOut(hdc, x, y, lpszLbuttonDownMessage, lstrlen(lpszLbuttonDownMessage));
 		ReleaseDC(hWnd, hdc);
-
-
 
 	}break;
 
