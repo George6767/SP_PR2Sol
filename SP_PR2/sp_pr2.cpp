@@ -1,202 +1,269 @@
-#include <windows.h>
-#include <windowsx.h>
+#include <Windows.h>
 #include <tchar.h>
-
-LPCTSTR lpszClass = TEXT("SpPr12_Class");
-LPCTSTR lpszAppTitle = TEXT("Главное окно приложения. Програмист Грицкевич");
-LPCTSTR lpszDestroyMessage = TEXT("Поступило сообщение WM_DESTROY, из обработчика "
-	"которого и выполнен данный вывод.Сообщение "
-	"поступило в связи с разрушением окна приложения");
-//-- Prototypes -------------------
-LRESULT CALLBACK pr1_WndProc(HWND hWnd, UINT Msg_id, WPARAM wParam, LPARAM lParam) {
-	static HWND hEdit;
-	const unsigned short int IDC_Edit = 200;
-	static HWND hListBox;
-	const unsigned short int IDC_ListBox = 201;
-	static HWND hButtonSave;
-	const unsigned short int IDC_ButtonSave = 202;
-	static HWND hButtonPrint;
-	const unsigned short int IDC_ButtonPrint = 203;
-	static HWND hButtonExit;
-	const unsigned short int IDC_ButtonExit = 204;
-	DWORD dwStyle = WS_CHILD | WS_BORDER | WS_VISIBLE;
-	static int LPad = 20, TPad = 30, CWidth = 120, CHeigth = 20;
-
-	static TCHAR lpsBuffer[1024];
-	static TCHAR lpsTextBuffer[200];
-	HDC hDC;
-	static int wmID, wmEvent;
-
-	switch (Msg_id)
-	{
-		case WM_CREATE: 
-		{
-		if (MessageBox(NULL, TEXT("Creating a window\nContinue?"), TEXT("Warning!"), MB_YESNO) == IDNO) 
-			{
-				return -1;
-			}
-		hEdit = CreateWindowEx(0, _T("Edit"), _T(""), dwStyle, LPad, TPad, CWidth, CHeigth, hWnd, (HMENU)IDC_Edit, 0, NULL);
-		if (!hEdit)
-			{
-				return -1;
-			}
-		hListBox = CreateWindowEx(0,
-			_T("ListBox"),
-			_T("ListBox"),
-			dwStyle,
-			LPad * 2 + CWidth, TPad, CWidth, CHeigth * 8,
-			hWnd,
-			(HMENU)IDC_ListBox,
-			0, NULL
-		);
-		if (!hListBox) 
-			{
-				return -1;
-			}
-		hButtonSave = CreateWindowEx(0,
-			_T("Button"),
-			_T("Save"),
-			dwStyle,
-			LPad, TPad * 2 + CHeigth * 2, CWidth * 2 / 3, CHeigth,
-			hWnd,
-			(HMENU)IDC_ButtonSave,
-			0, NULL);
-		if (!hButtonSave) 
-			{
-				return -1;
-			}
+// Указатель на строку с именем класса окна.
+#define g_lpszClassName TEXT ("sp_pr2_class")
+// Указатаель на строку отображаемую в заголовке окна.
+#define g_lpszAplicationTitle TEXT (" Главное окно приложения.")
+// Указатель на строку. Этот текст будет использоваться при выводе сообщения о закрытии окна.
+#define g_lpszDestroyMessage TEXT ("Поступило сообщение WM_DESTROY, из обработчика которого и выполнен данный вывод. Сообщение поступило в связи с разрушением окна приложения")
+#define ID_BUTTON 1
+// Указатель на строку используемую при ошибке регистрации класса окна.
+#define g_lpszErrorRegister TEXT ("Ошибка регистрации класса окна!")
+// Указатель на строку отображаемую в заголовке окна MessageBox при ошибке регистрации окна.
+#define g_lpszErrorTitle TEXT ("Ошибка!!!!!!!!!!") 
 
 
-		hButtonPrint = CreateWindowEx(0,
-			_T("Button"),
-			_T("Print"),
-			dwStyle,
-			LPad, TPad * 1.5 + CHeigth * 4, CWidth * 2 / 3, CHeigth,
-			hWnd,
-			(HMENU)IDC_ButtonPrint,
-			0, NULL);
-		if (!hButtonPrint)
-			{
-				return -1;
-			}
-		EnableWindow(hButtonPrint, FALSE);
+LRESULT CALLBACK Pr2_WndProc(HWND, UINT, WPARAM, LPARAM); // Прототип оконной процедуры для обработки сообщений главного окна
 
-		hButtonExit = CreateWindowEx(0,
-			_T("Button"),
-			_T("Exit"),
-			dwStyle,
-			LPad, TPad + CHeigth * 6, CWidth * 2 / 3, CHeigth,
-			hWnd,
-			(HMENU)IDC_ButtonExit,
-			0, NULL);
-		if (!hButtonExit) 
-			{
-				return -1;
-			}
-
-		return 0;
-		break;
-		}
-	
-
-//-- Global Variables ------------
-HINSTANCE g_hInst;
-// Стартовая функция
-int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-	LPTSTR lpszCmdLine, int nCmdShow)
+int APIENTRY _tWinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPTSTR IpszCmdLine, int nCmdShow)
 {
 	WNDCLASSEX wc;
 	MSG msg;
-	HWND hWnd;
-	g_hInst = hInstance;
 
+
+	//Описание класса окна
+	HBRUSH hbr = CreateSolidBrush(RGB(0, 255, 0));
 	memset(&wc, 0, sizeof(WNDCLASSEX));
+	//Заполненин структуры wc
 	wc.cbSize = sizeof(WNDCLASSEX);
-	wc.lpszClassName = lpszClass;
-	wc.lpfnWndProc = SpPr12_WndProc;
+	wc.lpszClassName = g_lpszClassName;
+	wc.lpfnWndProc = Pr2_WndProc;
 	wc.style = CS_VREDRAW | CS_HREDRAW;
-	wc.hInstance = hInstance;
+	wc.hInstance = h_instance;
 	wc.hIcon = LoadIcon(NULL, MAKEINTRESOURCE(IDI_APPLICATION));
 	wc.hCursor = LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW));
-	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wc.hbrBackground = hbr;
 	wc.lpszMenuName = NULL;
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
+	//Завершено описание класса окна
+
+	//Регистрация класса окна
 	if (!RegisterClassEx(&wc))
 	{
-		MessageBox(NULL, TEXT("Ошибка регистрации класса окна!"),
-			TEXT("Ошибка"), MB_OK | MB_ICONERROR);
+		//Ошибка регистрации класса окна
+		MessageBox(NULL, g_lpszErrorRegister, g_lpszErrorTitle, MB_OK | MB_ICONERROR);
 		return FALSE;
 	}
 
-	hWnd = CreateWindowEx(NULL, lpszClass, lpszAppTitle,
-		WS_OVERLAPPEDWINDOW, 200, 100 ,800,600,
-		NULL, NULL, hInstance, NULL);
+	HWND hWnd;
+	//Создание и отображение окна
+	hWnd = CreateWindowEx(
+		NULL,
+		g_lpszClassName,
+		g_lpszAplicationTitle,
+		WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MAXIMIZEBOX,
+		100,
+		100,
+		800, // ширина 
+		600, // высота
+		NULL,
+		NULL,
+		h_instance, // дескриптор экземпляра приложения
+		NULL);
+
+	//Если ошибка при создании окна
 	if (!hWnd)
 	{
-		MessageBox(NULL, TEXT("Окно не создано!"),
-			TEXT("Ошибка"), MB_OK | MB_ICONERROR);
+		MessageBox(NULL, TEXT("Окно не создано!"), TEXT("Ошибка"), MB_OK | MB_ICONERROR);
 		return FALSE;
 	}
-	ShowWindow(hWnd, nCmdShow);
+	ShowWindow(hWnd, nCmdShow); //Отображение окна
 	UpdateWindow(hWnd);
+
+	// Главный цикл выборки сообщений
 	while (GetMessage(&msg, NULL, 0, 0))
-	{	
+	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
-	return msg.wParam;
+	return msg.wParam; // выход из WinMai
 }
-// Оконная процедура
-LRESULT CALLBACK SpPr12_WndProc(HWND hWnd, UINT messageID,
-	WPARAM wParam, LPARAM lParam)
-{
 
-	switch (messageID)
+LRESULT CALLBACK Pr2_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	static HWND h_Edit;
+	static const UINT IDC_EDIT1 = 150;
+	static HWND h_ListBox;
+	static const UINT IDC_LISTBOX = 151;
+	static HWND h_ButtonSave;
+	static const UINT IDC_BUTTON_SAVE = 152;
+	static HWND h_ButtonAdd;
+	static const UINT IDC_BUTTON_ADD = 153;
+	static HWND h_ButtonExit;
+	static const UINT IDC_BUTTON_EXIT = 154;
+	switch (msg)
 	{
+		
+
 	case WM_CREATE:
-		if (MessageBox(NULL, TEXT("Creating a a window\nContinue"), TEXT("Warning!"), MB_YESNO) == IDYES)
+	{
 		{
-			return 0;
+			TCHAR text_mes[] = TEXT("Выполняется обработка WM_CREATE. \n Если вы хотите завершите обработку сообщения WM_CREATE возвратом значения 0, то нажмите YES. \n Если вы хотите завершите обработку сообщения WM_CREATE возвратом значения -1, то нажмите NO.");
+			TCHAR text_title[] = TEXT("CREATE");
+			if (MessageBox(NULL, text_mes, text_title, MB_YESNO) == IDNO)
+			{
+				return -1;
+			}
 		}
-		else
+
+		h_Edit = CreateWindowEx(
+			0,
+			TEXT("Edit"),
+			TEXT(""),
+			WS_CHILD | WS_BORDER | WS_VISIBLE,
+			20,
+			50,
+			160,
+			40,
+			hWnd,
+			(HMENU)(IDC_EDIT1),
+			0,
+			NULL);
+		if (!h_Edit)
 		{
-		return -1;
+			return (-1);
+		}
+
+
+		h_ListBox = CreateWindowEx(
+			0,
+			TEXT("ListBox"),
+			TEXT("Список"),
+			WS_CHILD | WS_BORDER | WS_VISIBLE,
+			200,
+			50,
+			160,
+			180,
+			hWnd,
+			(HMENU)(IDC_LISTBOX),
+			0,
+			NULL);
+		if (!h_ListBox)
+		{
+			return (-1);
+		}
+
+		h_ButtonSave = CreateWindowEx(
+			0,
+			TEXT("Button"),
+			TEXT("В буфер"),
+			WS_CHILD | WS_BORDER | WS_VISIBLE,
+			20,
+			240,
+			80,
+			24,
+			hWnd,
+			(HMENU)(IDC_BUTTON_SAVE),
+			0,
+			NULL);
+		if (!h_ButtonSave)
+		{
+			return (-1);
+		}
+
+
+		h_ButtonAdd = CreateWindowEx(
+			0,
+			TEXT("Button"),
+			TEXT("В список"),
+			WS_CHILD | WS_BORDER | WS_VISIBLE,
+			120,
+			240,
+			80,
+			24,
+			hWnd,
+			(HMENU)(IDC_BUTTON_ADD),
+			0,
+			NULL);
+		if (!h_ButtonAdd)
+		{
+			return (-1);
+		}
+
+		h_ButtonExit = CreateWindowEx(
+			0,
+			TEXT("Button"),
+			TEXT("Выход"),
+			WS_CHILD | WS_BORDER | WS_VISIBLE,
+			220,
+			240,
+			80,
+			24,
+			hWnd,
+			(HMENU)(IDC_BUTTON_EXIT),
+			0,
+			NULL);
+		if (!h_ButtonExit)
+		{
+			return (-1);
+		}
+	}
+	return 0;
+	break;
+
+	case WM_COMMAND:
+	{
+		int wmID;
+		int wmEvent;
+		wmID = LOWORD(wParam);
+		wmEvent = HIWORD(wParam);
+		static TCHAR pszText_Buffer[500];
+
+		switch (wmID)
+		{
+		case IDC_BUTTON_EXIT:
+		{
+			SendMessage(hWnd, WM_DESTROY, 0, 0);
+
 		}
 		break;
 
-	case WM_LBUTTONDOWN:
-	{
-		HDC hdc;
-		hdc = GetDC(hWnd);
-		int x;	// = 50;
-		int y;	// = 100;
-		x = (int)(short)LOWORD(lParam);
-		y = GET_Y_LPARAM(lParam);
-		LPCTSTR lpszLbuttonDownMessage = TEXT("Обработка сообщения WM_LBUTTONDOWN,"
-			" которое посылается в окно при щелчке левой кнопки мыши");
-		TextOut(hdc, x, y, lpszLbuttonDownMessage, lstrlen(lpszLbuttonDownMessage));
-		ReleaseDC(hWnd, hdc);
+		case IDC_BUTTON_SAVE:
+		{
+			int cch;
+			cch = SendMessage(h_Edit, WM_GETTEXT, (WPARAM)500, (LPARAM)pszText_Buffer);
+			if (cch == 0)
+			{
+				MessageBox(hWnd, TEXT("Введите текст"), TEXT("Читаем Edit"), MB_OK);
+			}
+			else
+			{
+				TCHAR Buffer1[500] = { 0 };
+				SYSTEMTIME st;
+				GetSystemTime(&st);
+				wsprintf(Buffer1, TEXT("Время : %d ч %d мин %d сек\n"), st.wHour, st.wMinute, st.wSecond);
+				lstrcat(Buffer1, TEXT("Текст в памяти: "));
+				lstrcat(Buffer1, pszText_Buffer);
+				MessageBox(hWnd, Buffer1, TEXT("Содержимое буфера"), MB_OK);
+			}
+		}
+		break;
 
-	}break;
+		case IDC_BUTTON_ADD:
+		{
+			int ind;
+			ind = SendMessage(h_ListBox, LB_ADDSTRING, (WPARAM)0, (LPARAM)pszText_Buffer);
+			if (ind == LB_ERR)
+			{
+				MessageBox(hWnd, TEXT("Ошибка в списке"), TEXT(""), MB_OK);
+			}
+			//EnableWindow(h_ButtonAdd, FALSE);
+		}
+		break;// end IDC_BUTTON_ADD
+		}
 
-	case WM_PAINT: // Вывод при обновлении окна
-	{	HDC hDC;
-		PAINTSTRUCT ps;
-			hDC = BeginPaint(hWnd, &ps);	// Получение контекста для
-											// обновления окна
-			LPCTSTR lpszHelloText = TEXT("Hello, World Win32!");
-		TextOut(hDC, 10, 10, lpszHelloText, lstrlen(lpszHelloText)); // Вывод в контекст
-		EndPaint(hWnd, &ps); // Завершение обновления окна
-	}	break;
-	case WM_DESTROY: // Завершение работы приложения
-	{	
-	MessageBox(hWnd, lpszDestroyMessage, TEXT("From WM_DESTROY"), MB_OK);
-	PostQuitMessage(5); // Посылка WM_QUIT приложению
-	}break;
-	
-	default: // Вызов "Обработчика по умолчанию"
-		return(DefWindowProc(hWnd, messageID, wParam, lParam));
 	}
-	return 0;// Для ветвей с "break"
+	break;
+
+	case WM_DESTROY:
+	{
+		MessageBox(NULL, g_lpszDestroyMessage, g_lpszAplicationTitle, MB_OK | MB_ICONERROR);
+		PostQuitMessage(5);
+	}
+	break;
+
+	default: return(DefWindowProc(hWnd, msg, wParam, lParam));
+	}
+	return FALSE;
 }
